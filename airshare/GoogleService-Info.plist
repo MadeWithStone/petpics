@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>AD_UNIT_ID_FOR_BANNER_TEST</key>
+	<string>ca-app-pub-3940256099942544/2934735716</string>
+	<key>AD_UNIT_ID_FOR_INTERSTITIAL_TEST</key>
+	<string>ca-app-pub-3940256099942544/4411468910</string>
+	<key>CLIENT_ID</key>
+	<string>512530852185-mi2f7dvbvjprk3v7b14g8q469dv20sd0.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.512530852185-mi2f7dvbvjprk3v7b14g8q469dv20sd0</string>
+	<key>API_KEY</key>
+	<string>AIzaSyATqvRtZpPEoSCe1hw--WBVkBYeIK_K-20</string>
+	<key>GCM_SENDER_ID</key>
+	<string>512530852185</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.thecrankfactory.airshare</string>
+	<key>PROJECT_ID</key>
+	<string>airshare-3f340</string>
+	<key>STORAGE_BUCKET</key>
+	<string>airshare-3f340.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<true></true>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<false></false>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:512530852185:ios:085590b0580cdf7f</string>
+	<key>DATABASE_URL</key>
+	<string>https://airshare-3f340.firebaseio.com</string>
+</dict>
+</plist>

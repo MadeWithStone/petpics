@@ -7,7 +7,7 @@
 //
 
 import XCTest
-@testable import airshare
+@testable import Pods_airshare
 
 class airshareTests: XCTestCase {
     

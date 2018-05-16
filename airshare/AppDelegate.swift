@@ -1,21 +1,48 @@
 //
 //  AppDelegate.swift
-//  airshare
+//  petpics
 //
 //  Created by Maxwell Stone on 11/23/17.
 //  Copyright © 2017 Maxwell Stone. All rights reserved.
 //
 
 import UIKit
+import Firebase
+import UserNotifications
 
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+    func messaging(_ messaging: Messaging, didRefreshRegistrationToken fcmToken: String) {
+        //hello
+    }
+    
 
     var window: UIWindow?
-
+    
+    
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        UIApplication.shared.statusBarStyle = .lightContent
+        if #available(iOS 11.0, *) {
+            // For iOS 10 display notification (sent via APNS)
+            UNUserNotificationCenter.current().delegate = self
+            let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
+            UNUserNotificationCenter.current().requestAuthorization(
+                options: authOptions,
+                completionHandler: {_, _ in })
+            // For iOS 10 data message (sent via FCM
+            Messaging.messaging().delegate = self
+        } else {
+            let settings: UIUserNotificationSettings =
+                UIUserNotificationSettings(types: [.alert, .badge, .sound], categories: nil)
+            application.registerUserNotificationSettings(settings)
+        }
+        
+        application.registerForRemoteNotifications()
+        FirebaseApp.configure()
+        GADMobileAds.configure(withApplicationID: "ca-app-pub-5790083206239403~2306480249")
         return true
     }
 
