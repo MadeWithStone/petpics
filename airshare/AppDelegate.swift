@@ -43,6 +43,70 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         application.registerForRemoteNotifications()
         FirebaseApp.configure()
         GADMobileAds.configure(withApplicationID: "ca-app-pub-5790083206239403~2306480249")
+        
+        //get data
+        func getPosts(){
+            
+            //get all posts
+            
+            Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
+                
+                //put data in variable snapshot
+                
+                guard let cloudPosts = snapshot.children.allObjects as? [DataSnapshot] else { return }
+                
+                
+                //get local posts
+                
+                if let localPosts = load(forkey: "localPosts") as? [[String:AnyObject]] {
+                    
+                    if localPosts.count == cloudPosts.count {
+                        
+                        //break code
+                        
+                    } else if localPosts.count < cloudPosts.count {
+                        
+                        for i in 0 ... cloudPosts.count {
+                            
+                            if i > localPosts.count {
+                                
+                            } else if let currentLocalPost = localPosts[i] as? [String:AnyObject]{
+                                
+                                for j in cloudPosts {
+                                    
+                                    guard let currentCloudPost = j as? [String:AnyObject] else {return}
+                                    
+                                    if currentLocalPost["id"] == currentCloudPost["id"] {
+                                        
+                                    }
+                                }
+                                
+                            }
+                            
+                        }
+                        
+                    }
+                }
+            }
+            
+        }
+        
+        func getImages(){
+            
+        }
+        
+        func save(val: AnyObject, forkey: String){
+            
+            UserDefaults.standard.set(val, forKey: forkey)
+            
+        }
+        
+        func load(forkey: String) -> AnyObject {
+            
+            return UserDefaults.standard.value(forKey: forkey) as! AnyObject
+            
+        }
+        
         return true
     }
 
