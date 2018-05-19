@@ -12,6 +12,11 @@ import UserNotifications
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
+    
+    var newPosts: [Post] = []
+    
+    var postsToSave: [[String:AnyObject]] = [[:]]
+    
     func messaging(_ messaging: Messaging, didRefreshRegistrationToken fcmToken: String) {
         //hello
     }
@@ -66,34 +71,101 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                         
                     } else if localPosts.count < cloudPosts.count {
                         
-                        for i in 0 ... cloudPosts.count {
+                        var i = 0
+                        while i <= localPosts.count {
                             
-                            if i > localPosts.count {
-                                
-                            } else if let currentLocalPost = localPosts[i] as? [String:AnyObject]{
-                                
-                                for j in cloudPosts {
-                                    
-                                    guard let currentCloudPost = j as? [String:AnyObject] else {return}
-                                    
-                                    if currentLocalPost["id"] == currentCloudPost["id"] {
+                        
+                            for j in cloudPosts {
+                            
+                                guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
+                            
+                                //let currentLocalPost = localPosts[i]
+                            
+                                //let currentLocalPostId = currentLocalPost["id"] as? String
+                            
+                                //let currentCloudPostId = currentCloudPost["id"] as? String
+                            
+                                if i > localPosts.count {
+                                    /*if currentLocalPostId == currentCloudPostId {
                                         
-                                    }
+                                    }*/
+                                    
+                                    //let currentPost = Post(postKey: currentCloudPostId!, postData: currentCloudPost)
+                                    
+                                    self.postsToSave.append(currentCloudPost)
+                                    
+                                    
+                                    
                                 }
                                 
+                                
+                                
+                                
                             }
+                        
+                            i = i+1
                             
                         }
-                        
+                            
                     }
+                    
                 }
             }
+        }
             
+        
+        
+        func getImages(p: Array<Dictionary<String,AnyObject>>){
+            
+            //var i = 0
+            
+            var currentData = p
+            
+            for i in 0 ... currentData.count {
+                
+                var data = currentData[i]
+                
+                let userImg = downloadImages(url: data["userImg"] as! String)
+                
+                let postImg = downloadImages(url: data["postText"] as! String)
+                
+                data["userImg"] = userImg
+                
+                data["postText"] = postImg
+                
+                currentData[i] = data
+                
+            }
+            
+            save(val: currentData as AnyObject, forkey: "localPosts")
+            
+        }
+    
+        func downloadImages(url: String) -> UIImage {
+            
+            var returnImg: UIImage!
+            
+            let ref = Storage.storage().reference(forURL: url)
+            ref.getData(maxSize: 100000000, completion: { (data, error) in
+                if error != nil {
+                    print(error ?? "no error")
+                    print("couldnt load img")
+                } else {
+                    if let imgData = data {
+                        if let img = UIImage(data: imgData){
+                            returnImg = img
+                        }
+                    } else {
+                        returnImg = #imageLiteral(resourceName: "dog-sillouete")
+                    }
+                }
+            })
+            
+            return returnImg
+        
         }
         
-        func getImages(){
-            
-        }
+    
         
         func save(val: AnyObject, forkey: String){
             
