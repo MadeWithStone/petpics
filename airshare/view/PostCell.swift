@@ -66,45 +66,36 @@ class PostCell: UITableViewCell {
         print((indexPath?.row)!-1)
         //print("indexPath: ", UserDefaults.standard.value(forKey: "index"))
         Database.database().reference().child("textPosts").child(keys[(indexPath?.row)!-1]).updateChildValues(["stars" : starChange])
-        feed.getPosts()
+        //feed.getPosts()
     }
     
     func configCell(post: Post) {
+        
+        
+        
         self.post = post
         self.username.text = post.username
         self.starsLbl.text = String(post.stars)
         self.dateLbl.text = post.date
         
-        let ref = Storage.storage().reference(forURL: post.userImg)
-        ref.getData(maxSize: 100000000, completion: { (data, error) in
-            if error != nil {
-                print(error ?? "no error")
-                print("couldnt load img")
-            } else {
-                if let imgData = data {
-                    if let img = UIImage(data: imgData){
-                        self.userImg.image = img
-                    }
-                } else {
-                    self.userImg.image = #imageLiteral(resourceName: "dog-sillouete")
-                }
-            }
-        })
-        let reft = Storage.storage().reference(forURL: post.postText)
-        reft.getData(maxSize: 100000000, completion: { (data, error) in
-            if error != nil {
-                print(error!)
-                print("couldnt load img")
-            } else {
-                if let imgtData = data {
-                    if let imgt = UIImage(data: imgtData){
-                        self.postImg.image = imgt
-                    } else {
-                        self.postImg.image = #imageLiteral(resourceName: "dog-sillouete")
-                    }
-                }
-            }
-        })
+        
+            self.postImg.image = post.postText
+       
+        
+        
+            self.userImg.image = post.userImg
+        
+        
+        
+        
+        
+        
+    }
+    
+    func load(forkey: String) -> AnyObject {
+        
+        return UserDefaults.standard.value(forKey: forkey) as AnyObject
+        
     }
     
     func configLoadingCell(b: Bool){

@@ -31,11 +31,15 @@ class ViewController: UIViewController {
     var uid = ""
     var userId: User!
     
+    var newPosts: [Post] = []
+    
+    var postsToSave: [[String:AnyObject]] = [[:]]
+    
     func save(data: [String], forkey: String){
         UserDefaults.standard.set(data, forKey: forkey)
         UserDefaults.standard.synchronize()
     }
-    func load(forkey: String) {
+    func loadt(forkey: String) {
         if let data = UserDefaults.standard.value(forKey: forkey) as? [String] {
             
             Auth.auth().signIn(withEmail: data[0], password: data[1], completion: { (user, err) in
@@ -49,10 +53,11 @@ class ViewController: UIViewController {
                     }))
                     self.present(alert, animated: true, completion: nil)
                 } else if user?.isEmailVerified == true {
+                    self.getPosts()
                     Messaging.messaging().subscribe(toTopic: "newPost")
                     print("Subscribed to newPost")
                     self.userId = user
-                    self.performSegue(withIdentifier: "toFeed", sender: nil)
+                    
                 } else {
                     let alert = UIAlertController(title: "Verification Error", message: "You must first verify your email.", preferredStyle: .alert)
                     alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: {  (_) in
@@ -82,6 +87,8 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        
         imagePicker = UIImagePickerController()
         imagePicker.allowsEditing = true
         imagePicker.delegate = self
@@ -105,7 +112,7 @@ class ViewController: UIViewController {
     }
     
     override func viewDidAppear(_ animated: Bool) {
-        load(forkey: "uid")
+        loadt(forkey: "uid")
     }
     
     func storeUserData(){
@@ -226,6 +233,204 @@ class ViewController: UIViewController {
         }
     }
     
+    //get data
+    func getPosts(){
+        
+        //get all posts
+        
+        Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
+            
+            //put data in variable snapshot
+            
+            guard let cloudPosts = snapshot.children.allObjects as? [DataSnapshot] else { return }
+            
+            
+            //get local posts
+            
+            if let localPosts = self.load(forkey: "localPosts") as? [[String:AnyObject]] {
+                
+                if localPosts.count == cloudPosts.count {
+                    
+                    //break code
+                    
+                } else if localPosts.count < cloudPosts.count {
+                    
+                    var i = 0
+                    while i >= localPosts.count {
+                        
+                        
+                        for j in cloudPosts {
+                            
+                            guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
+                            
+                            //let currentLocalPost = localPosts[i]
+                            
+                            //let currentLocalPostId = currentLocalPost["id"] as? String
+                            
+                            //let currentCloudPostId = currentCloudPost["id"] as? String
+                            
+                            
+                                /*if currentLocalPostId == currentCloudPostId {
+                                 
+                                 }*/
+                                
+                                //let currentPost = Post(postKey: currentCloudPostId!, postData: currentCloudPost)
+                                
+                                
+                                
+                                self.postsToSave.append(currentCloudPost)
+                                
+                                print("the posts are: ", self.postsToSave)
+                                
+                                self.postsToSave.remove(at: 0)
+                                
+                                
+                                
+                            
+                            
+                            
+                            
+                            
+                        }
+                        
+                        i = i+1
+                        
+                    }
+                    
+                }
+                
+            } else {
+                for j in cloudPosts {
+                    
+                    guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
+                    
+                    //let currentLocalPost = localPosts[i]
+                    
+                    //let currentLocalPostId = currentLocalPost["id"] as? String
+                    
+                    //let currentCloudPostId = currentCloudPost["id"] as? String
+                    
+                    self.postsToSave.append(currentCloudPost)
+                    
+                    
+                    
+                    //print("the posts are: ", self.postsToSave)
+                    
+                    
+                    
+                    
+                    
+                    
+                }
+            }
+            //var i = 0
+           
+                
+                
+            
+                
+                //i = i+1
+                
+            self.postsToSave.remove(at: 0)
+            self.getImages(p: self.postsToSave)
+            
+            
+        }
+    }
+    
+    
+    func getImages(p: Array<Dictionary<String,AnyObject>>){
+        
+        var i = 0
+        
+        var currentData = p
+        
+        
+        
+        while i < currentData.count{
+            
+            let ri = i
+            print("i is: ", ri)
+            print("number of posts: ", currentData.count)
+            
+            var data = currentData[ri]
+            
+            print("user: ", currentData[ri])
+            
+            let userImg = downloadImages(url: data["userImg"] as! String)
+            
+            let postImg = downloadImages(url: data["postText"] as! String)
+            
+            data["userImg"] = userImg
+            
+            data["postText"] = postImg
+            
+            currentData[ri] = data
+            
+            i = i+1
+            
+        }
+        
+        save(val: currentData, forkey: "localPosts")
+        
+    }
+    
+    func downloadImages(url: String) -> UIImage {
+        
+        var postImg: UIImage!
+        
+        let ref = Storage.storage().reference(forURL: url)
+        ref.getData(maxSize: 100000000, completion: { (data, error) in
+            if error != nil {
+                print(error ?? "no error")
+                print("couldnt load img")
+            } else {
+                if let imgData = data {
+                    if let img = UIImage(data: imgData){
+                        postImg = img
+                        print("the current image is: ", postImg)
+                    }
+                } else {
+                    postImg = #imageLiteral(resourceName: "dog-sillouete")
+                }
+            }
+        })
+        
+        return #imageLiteral(resourceName: "dog-sillouete")
+        
+    }
+    
+    
+    
+    func save(val: Array<Dictionary<String,AnyObject>>, forkey: String){
+        
+        UserDefaults.standard.set(NSKeyedArchiver.archivedData(withRootObject: val), forKey: forkey)
+        
+        print("post download is compelete: ", val)
+        
+        self.performSegue(withIdentifier: "toFeed", sender: nil)
+        
+    }
+    
+    func load(forkey: String) -> Array<Dictionary<String,AnyObject>> {
+        
+        if let local = UserDefaults.standard.value(forKey: forkey) as? NSData {
+            
+            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! Array<Dictionary<String,AnyObject>>
+            
+            return localPosts
+            
+        } else {
+            return [[:]]
+        }
+        
+        
+        
+        
+        
+    }
+    
+    
     
     override func didReceiveMemoryWarning() {
         super.didReceiveMemoryWarning()
@@ -233,12 +438,17 @@ class ViewController: UIViewController {
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
         if segue.identifier == "toFeed" {
+            
             let wvc = segue.destination as! UITabBarController
+            
             let lvc = wvc.viewControllers?.first as! UINavigationController
+            
             let vc = lvc.viewControllers.first as! FeedVC
             
             vc.userId = userId
+            
         }
     }
 }

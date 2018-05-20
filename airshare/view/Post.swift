@@ -11,8 +11,8 @@ import Firebase
 
 class Post {
     private var _username: String!
-    private var _userImg: String!
-    private var _postText: String!
+    private var _userImg: UIImage!
+    private var _postText: UIImage!
     private var _postKey:  String!
     private var _stars: Int!
     private var _postRef: DatabaseReference!
@@ -30,15 +30,15 @@ class Post {
         return _stars
     }
     
-    var userImg: String {
+    var userImg: UIImage {
         return _userImg
     }
     
-    var postText: String {
+    var postText: UIImage {
         if _postText != nil {
             return _postText
-        } else {
-            return "https://firebasestorage.googleapis.com/v0/b/airshare-3f340.appspot.com/o/staticImgs%2Fdog-sillouete.png?alt=media&token=49b81e03-8bef-4db4-9b31-27cdc2b1571d"
+        }else {
+            return #imageLiteral(resourceName: "dog-sillouete")
         }
         
     }
@@ -47,7 +47,7 @@ class Post {
         return _postKey
     }
     
-    init(postText: String, username: String, userImg: String, stars: Int, date: String) {
+    init(postText: UIImage, username: String, userImg: UIImage, stars: Int, date: String) {
         _postText = postText
         _username = username
         _userImg = userImg
@@ -62,11 +62,11 @@ class Post {
             _username = username
         }
         
-        if let userImg = postData["userImg"] as? String {
+        if let userImg = postData["userImg"] as? UIImage {
             _userImg = userImg
         }
         
-        if let postText = postData["postText"] as? String {
+        if let postText = postData["postText"] as? UIImage {
             _postText = postText
         }
         

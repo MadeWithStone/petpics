@@ -61,7 +61,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
             child = "time"
         }
         
-        getPosts()
+        //getPosts()
     }
     
     //Initialize View(viewDidLoad())
@@ -79,7 +79,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     override func viewDidAppear(_ animated: Bool) {
         //initialize()
         self.tableView.setContentOffset(CGPoint(x: 0, y: self.offset ), animated: true)
-        getPosts()
+        //getPosts()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -103,7 +103,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         // Fetch more objects from a web service, for example...
         
         // Simply adding an object to the data source for this example
-        getPosts()
+        //getPosts()
         
         
     }
@@ -112,7 +112,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         
         
         dataArray = [["hello":"yes" as AnyObject]]
-        getPosts()
+        //getPosts()
         getVars()
         sortBtn.setTitle("Leaderboard", for: .normal)
         interstitial = createAndLoadInterstitial()
@@ -158,7 +158,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     }
     
     @objc func refresh(_ sender: AnyObject) {
-        getPosts()
+        //getPosts()
         
         self.tableView.reloadData()
         refreshControl?.endRefreshing()
@@ -192,7 +192,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
                             
                         }
                         if postDict["username"] as? String == "admin" {
-                            self.getPosts()
+                            //self.getPosts()
                         }
                     }
                     
@@ -232,7 +232,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         
     }
     
-    func getPosts() {
+    /*func getPosts() {
         Database.database().reference().child("textPosts").queryOrdered(byChild: child).observe(.childChanged) { (snapshot) in
             guard let snapshot = snapshot.children.allObjects as? [DataSnapshot] else { return }
             //self.posts.removeAll()
@@ -342,7 +342,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         refControl.endRefreshing()
         
         
-    }
+    }*/
     
    
     
@@ -442,12 +442,26 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         guard let cell = tableView.dequeueReusableCell(withIdentifier: "postCell") as? PostCell else { return UITableViewCell() }
         print("there are: ", posts.count, " posts")
         print("the current post is: ", indexPath.row-1)
-        if posts.count == 0 {
-            print("there are 0 posts")
-            getPosts()
-        } else {
-            cell.configCell(post: posts[indexPath.row-1])
+        
+        if let local = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+            
+            print("displaying images")
+            
+            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! Array<Dictionary<String,AnyObject>>
+            
+            cell.configCell(post: Post(postKey: localPosts[indexPath.row-1]["id"] as! String, postData: localPosts[indexPath.row-1]))
+            
+            if posts.count == 0 {
+                print("there are 0 posts")
+                //getPosts()
+            } else {
+                cell.configCell(post: Post(postKey: localPosts[indexPath.row-1]["id"] as! String, postData: localPosts[indexPath.row-1]))
+            }
         }
+        
+        
+        
+        
         
         cell.layoutIfNeeded()
         //cell.configCell(post: posts[indexPath.row-1])

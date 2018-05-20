@@ -29,6 +29,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
+      // getPosts()
+        
         UIApplication.shared.statusBarStyle = .lightContent
         if #available(iOS 11.0, *) {
             // For iOS 10 display notification (sent via APNS)
@@ -49,70 +51,76 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         FirebaseApp.configure()
         GADMobileAds.configure(withApplicationID: "ca-app-pub-5790083206239403~2306480249")
         
-        //get data
-        func getPosts(){
+        return true
+    }
+    
+    //get data
+    func getPosts(){
+        
+        //get all posts
+        
+        Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
             
-            //get all posts
+            //put data in variable snapshot
             
-            Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
+            guard let cloudPosts = snapshot.children.allObjects as? [DataSnapshot] else { return }
+            
+            
+            //get local posts
+            
+            if let localPosts = self.load(forkey: "localPosts") as? [[String:AnyObject]] {
                 
-                //put data in variable snapshot
-                
-                guard let cloudPosts = snapshot.children.allObjects as? [DataSnapshot] else { return }
-                
-                
-                //get local posts
-                
-                if let localPosts = load(forkey: "localPosts") as? [[String:AnyObject]] {
+                if localPosts.count == cloudPosts.count {
                     
-                    if localPosts.count == cloudPosts.count {
+                    //break code
+                    
+                } else if localPosts.count < cloudPosts.count {
+                    
+                    var i = 0
+                    while i >= localPosts.count {
                         
-                        //break code
                         
-                    } else if localPosts.count < cloudPosts.count {
-                        
-                        var i = 0
-                        while i <= localPosts.count {
+                        for j in cloudPosts {
                             
-                        
-                            for j in cloudPosts {
+                            guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
                             
-                                guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
+                            //let currentLocalPost = localPosts[i]
                             
-                                //let currentLocalPost = localPosts[i]
+                            //let currentLocalPostId = currentLocalPost["id"] as? String
                             
-                                //let currentLocalPostId = currentLocalPost["id"] as? String
+                            //let currentCloudPostId = currentCloudPost["id"] as? String
                             
-                                //let currentCloudPostId = currentCloudPost["id"] as? String
-                            
-                                if i > localPosts.count {
-                                    /*if currentLocalPostId == currentCloudPostId {
-                                        
-                                    }*/
-                                    
-                                    //let currentPost = Post(postKey: currentCloudPostId!, postData: currentCloudPost)
-                                    
-                                    self.postsToSave.append(currentCloudPost)
-                                    
-                                    
-                                    
-                                }
+                            if i > localPosts.count {
+                                /*if currentLocalPostId == currentCloudPostId {
+                                 
+                                 }*/
+                                
+                                //let currentPost = Post(postKey: currentCloudPostId!, postData: currentCloudPost)
                                 
                                 
                                 
+                                self.postsToSave.append(currentCloudPost)
+                                
+                                print("the posts are: ", self.postsToSave)
+                                
+                                self.getImages(p: self.postsToSave)
                                 
                             }
-                        
-                            i = i+1
+                            
+                            
+                            
                             
                         }
-                            
+                        
+                        i = i+1
+                        
                     }
                     
                 }
+                
             }
         }
-            
+    }
         
         
         func getImages(p: Array<Dictionary<String,AnyObject>>){
@@ -171,16 +179,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             
             UserDefaults.standard.set(val, forKey: forkey)
             
+            print("post download is compelete: ", val)
+            
         }
         
         func load(forkey: String) -> AnyObject {
             
-            return UserDefaults.standard.value(forKey: forkey) as! AnyObject
+            return UserDefaults.standard.value(forKey: forkey) as AnyObject
             
         }
         
-        return true
-    }
+        
+    
 
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
