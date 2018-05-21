@@ -35,7 +35,9 @@ class ViewController: UIViewController {
     
     var postsToSave: [[String:AnyObject]] = [[:]]
     
-    func save(data: [String], forkey: String){
+    var updatedPostsToSave: [[String:AnyObject]] = [[:]]
+    
+    func savet(data: [String], forkey: String){
         UserDefaults.standard.set(data, forKey: forkey)
         UserDefaults.standard.synchronize()
     }
@@ -87,7 +89,7 @@ class ViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        UserDefaults.standard.removeObject(forKey: "localPosts")
         
         imagePicker = UIImagePickerController()
         imagePicker.allowsEditing = true
@@ -167,14 +169,14 @@ class ViewController: UIViewController {
                             self.uid = (user?.uid)!
                             self.storeUserData()
                             let userInfo = [e, pass]
-                            self.save(data: userInfo, forkey: "uid")
+                            self.savet(data: userInfo, forkey: "uid")
                             //KeychainWrapper.standard.set((user?.uid)!, forKey: "KEY_UID")
                             print("This is the key: "  + (user?.uid)!)
                         }
                         self.uid = (user?.uid)!
                         self.storeUserData()
                         let userInfo = [e, pass]
-                        self.save(data: userInfo, forkey: "uid")
+                        self.savet(data: userInfo, forkey: "uid")
                         //KeychainWrapper.standard.set((user?.uid)!, forKey: "KEY_UID")
                         print("This is the key: "  + (user?.uid)!)
                         
@@ -185,7 +187,7 @@ class ViewController: UIViewController {
                         Messaging.messaging().subscribe(toTopic: "newPost")
                         print("Subscribed to newPost")
                         //Save User and Perform segue
-                        self.save(data: ([e, pass]), forkey: "uid")
+                        self.savet(data: ([e, pass]), forkey: "uid")
                         //KeychainWrapper.standard.set((userUID), forKey: "KEY_UID")
                         self.performSegue(withIdentifier: "toFeed", sender: nil)
                     }
@@ -233,146 +235,102 @@ class ViewController: UIViewController {
         }
     }
     
-    //get data
     func getPosts(){
-        
-        //get all posts
         
         Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
             
-            //put data in variable snapshot
+            guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
             
-            guard let cloudPosts = snapshot.children.allObjects as? [DataSnapshot] else { return }
-            
-            
-            //get local posts
-            
-            if let localPosts = self.load(forkey: "localPosts") as? [[String:AnyObject]] {
+            if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
                 
-                if localPosts.count == cloudPosts.count {
+                let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! Array<Dictionary<String,AnyObject>>
+                
+                print("loaded posts count", localData.count)
+                
+                var i = 0
+                
+                for data in snap {
                     
-                    //break code
+                    let postDict = data.value as? Dictionary<String,AnyObject>
                     
-                } else if localPosts.count < cloudPosts.count {
+                    let idLocal = localData[i]["id"] as? String
                     
-                    var i = 0
-                    while i >= localPosts.count {
+                    let idCloud = postDict!["id"] as? String
+                    
+                    if idLocal != idCloud {
+                        
+                        self.postsToSave.append(postDict!)
+                        
+                    } else {
                         
                         
-                        for j in cloudPosts {
-                            
-                            guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
-                            
-                            //let currentLocalPost = localPosts[i]
-                            
-                            //let currentLocalPostId = currentLocalPost["id"] as? String
-                            
-                            //let currentCloudPostId = currentCloudPost["id"] as? String
-                            
-                            
-                                /*if currentLocalPostId == currentCloudPostId {
-                                 
-                                 }*/
-                                
-                                //let currentPost = Post(postKey: currentCloudPostId!, postData: currentCloudPost)
-                                
-                                
-                                
-                                self.postsToSave.append(currentCloudPost)
-                                
-                                print("the posts are: ", self.postsToSave)
-                                
-                                self.postsToSave.remove(at: 0)
-                                
-                                
-                                
-                            
-                            
-                            
-                            
-                            
-                        }
-                        
-                        i = i+1
                         
                     }
+                    
+                    i = i + 1
                     
                 }
                 
             } else {
-                for j in cloudPosts {
+                
+                for data in snap {
                     
-                    guard let currentCloudPost = j.value as? [String:AnyObject] else {return}
-                    
-                    //let currentLocalPost = localPosts[i]
-                    
-                    //let currentLocalPostId = currentLocalPost["id"] as? String
-                    
-                    //let currentCloudPostId = currentCloudPost["id"] as? String
-                    
-                    self.postsToSave.append(currentCloudPost)
-                    
-                    
-                    
-                    //print("the posts are: ", self.postsToSave)
-                    
-                    
-                    
-                    
-                    
+                    let postDict = data.value as? Dictionary<String,AnyObject>
+    
+                    self.postsToSave.append(postDict!)
+                   
                     
                 }
             }
-            //var i = 0
-           
-                
-                
             
-                
-                //i = i+1
-                
             self.postsToSave.remove(at: 0)
-            self.getImages(p: self.postsToSave)
             
+            self.getImages(p: self.postsToSave)
+         
             
         }
+        
     }
     
     
-    func getImages(p: Array<Dictionary<String,AnyObject>>){
+    func getImages(p: Array<Dictionary<String,AnyObject>>) {
         
-        var i = 0
-        
-        var currentData = p
+        var newData: Dictionary<String,AnyObject>
         
         
         
-        while i < currentData.count{
+        for data in p {
             
-            let ri = i
-            print("i is: ", ri)
-            print("number of posts: ", currentData.count)
-            
-            var data = currentData[ri]
-            
-            print("user: ", currentData[ri])
+            newData = data
             
             let userImg = downloadImages(url: data["userImg"] as! String)
             
             let postImg = downloadImages(url: data["postText"] as! String)
             
-            data["userImg"] = userImg
+            while postImg.images == nil && userImg.images == nil {
+                
+            }
             
-            data["postText"] = postImg
+            newData["userImg"] = userImg
             
-            currentData[ri] = data
+            newData["postText"] = postImg
             
-            i = i+1
+            updatedPostsToSave.append(newData)
             
         }
         
-        save(val: currentData, forkey: "localPosts")
+        updatedPostsToSave.remove(at: 0)
         
+        print("donwloaded posts count: ", updatedPostsToSave.count)
+        
+        let dataToSave = NSKeyedArchiver.archivedData(withRootObject: updatedPostsToSave)
+        
+        UserDefaults.standard.set(dataToSave, forKey: "localPosts")
+        UserDefaults.standard.synchronize()
+        
+        print("posts have been saved")
+        
+    
     }
     
     func downloadImages(url: String) -> UIImage {
