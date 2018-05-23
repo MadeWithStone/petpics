@@ -424,15 +424,14 @@ class ViewController: UIViewController {
             newData = data
             
             //define userImg variable that contains UIImage
-            let userImg = downloadImages(url: data["userImg"] as! String)
+            downloadImages(url: data["userImg"] as! String, completion: {(img) -> Void in newData["userImg"] = img})
+            
+            print("got user image")
             
             //define postImg variable that contains UIImage
-            let postImg = downloadImages(url: data["postText"] as! String)
+            downloadImages(url: data["postText"] as! String, completion: {(img) -> Void in newData["postText"] = img})
             
-            //sub in images
-            newData["userImg"] = userImg
-            
-            newData["postText"] = postImg
+            print("got post image")
             
             //add posts to array
             updatedPostsToSave.append(newData)
@@ -457,7 +456,7 @@ class ViewController: UIViewController {
         
     }
     
-    func downloadImages(url: String) -> UIImage {
+    func downloadImages(url: String , completion: @escaping (_ img:UIImage?) -> ()) -> Void {
         
         //define variable to hold downloaded image
         var postImg: UIImage!
@@ -501,7 +500,7 @@ class ViewController: UIViewController {
         })
         
         //return image to put in view controller
-        return postImg
+        handler(UIImage(data: postImg))
         
     }
     
