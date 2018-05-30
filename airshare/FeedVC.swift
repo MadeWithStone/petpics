@@ -71,6 +71,16 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         UserDefaults.standard.removeObject(forKey: "index")
         
         self.tableView.addSubview(self.refControl)
+        
+        if let local = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+            
+            
+            
+            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! Array<Dictionary<String,AnyObject>>
+            
+            dataArray = localPosts
+        }
+        initialize()
         self.tableView.reloadData()
         
         
@@ -104,7 +114,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         
         // Simply adding an object to the data source for this example
         //getPosts()
-        
+        refreshControl.endRefreshing()
         
     }
     
@@ -209,7 +219,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
                 print("the user is: " + self.userOfWeak)
             }
         }
-        
+        self.tableView.reloadData()
     }
     
     func getUserData(){
@@ -378,7 +388,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return 1 + posts.count
+        return 1 + dataArray.count
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -426,6 +436,8 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
+        var cellToReturn: AnyObject!
+        print(indexPath.row)
         if indexPath.row == 0 {
             if let cell = tableView.dequeueReusableCell(withIdentifier: "Cell") as? ShareSomethingCell {
                 
@@ -435,37 +447,35 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
                     
                 }
                 cell.shareBtn.addTarget(self, action: #selector(toCreatePost), for: .touchUpInside)
-                return cell
+                cellToReturn = cell
             }
         }
         
-        guard let cell = tableView.dequeueReusableCell(withIdentifier: "postCell") as? PostCell else { return UITableViewCell() }
-        print("there are: ", posts.count, " posts")
-        print("the current post is: ", indexPath.row-1)
         
-        if let local = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+        if indexPath.row > 0 {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "postCell") as? PostCell else { return UITableViewCell() }
+            print("there are: ", posts.count, " posts")
+            print("the current post is: ", indexPath.row-1)
+            
             
             print("displaying images")
+            print(dataArray)
+            let currentPost = Post(postKey: dataArray[indexPath.row-1]["id"] as! String, postData: dataArray[indexPath.row-1])
+                print("configuring cells")
+                cell.configCell(post: currentPost)
             
-            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! Array<Dictionary<String,AnyObject>>
-            
-            cell.configCell(post: Post(postKey: localPosts[indexPath.row-1]["id"] as! String, postData: localPosts[indexPath.row-1]))
-            
-            if posts.count == 0 {
-                print("there are 0 posts")
-                //getPosts()
-            } else {
-                cell.configCell(post: Post(postKey: localPosts[indexPath.row-1]["id"] as! String, postData: localPosts[indexPath.row-1]))
+                
+                
+                
+                
+                
+                
+                cell.layoutIfNeeded()
+                //cell.configCell(post: posts[indexPath.row-1])
+                cellToReturn = cell
             }
-        }
         
-        
-        
-        
-        
-        cell.layoutIfNeeded()
-        //cell.configCell(post: posts[indexPath.row-1])
-        return cell
+        return cellToReturn as! UITableViewCell
     }
     
     /*override func scrollViewDidScroll(_ scrollView: UIScrollView) {

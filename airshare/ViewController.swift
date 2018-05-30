@@ -34,6 +34,7 @@ class ViewController: UIViewController {
     var postsToSave: [[String:AnyObject]] = [[:]]
     var updatedPostsToSave: [[String:AnyObject]] = [[:]]
     var cloudPostsCount = 0
+    let postCompletion = DispatchGroup()
     
     func savet(data: [String], forkey: String){
         
@@ -426,12 +427,12 @@ class ViewController: UIViewController {
             
             
             //define userImg variable that contains UIImage
-            downloadImages(url: data["userImg"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["userImg"] = img; self.updatedPostsToSave[arrayNum]["userImg"] = img; print("got userImg")}
+            downloadImages(url: data["userImg"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["userImg"] = img; self.updatedPostsToSave[arrayNum]["userImg"] = img; print("got userImg"); self.postCompletion.leave()}
             
             
             
             //define postImg variable that contains UIImage
-            downloadImages(url: data["postText"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["postText"] = img; self.updatedPostsToSave[arrayNum]["postText"] = img; print("got postImg");self.save(val: self.updatedPostsToSave, forkey: "localPosts", arrayNum: arrayNum)}
+            downloadImages(url: data["postText"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["postText"] = img; self.updatedPostsToSave[arrayNum]["postText"] = img; print("got postImg");self.postCompletion.leave()}
             
            
             
@@ -443,7 +444,20 @@ class ViewController: UIViewController {
         //remove initial value
         updatedPostsToSave.remove(at: 0)
         
-        print("donwloaded posts count: ", updatedPostsToSave.count)
+        print("downloaded posts count: ", updatedPostsToSave.count)
+        
+        //when all requests are done
+        postCompletion.notify(queue: .main){
+            let dataToSave = NSKeyedArchiver.archivedData(withRootObject: self.updatedPostsToSave)
+            UserDefaults.standard.set(dataToSave, forKey: "localPosts")
+            UserDefaults.standard.synchronize()
+            
+            print("post download is compelete: ")
+            
+            
+            
+            self.performSegue(withIdentifier: "toFeed", sender: nil)
+        }
         
         /*//archive data to save
         let dataToSave = NSKeyedArchiver.archivedData(withRootObject: updatedPostsToSave)
@@ -463,6 +477,9 @@ class ViewController: UIViewController {
     
     func downloadImages(url: String , arrayNum: Int , completion:@escaping (_ img:UIImage, _ next: Bool, _ arrayNum: Int) -> Void) {
         
+        //enter dispatch group
+        postCompletion.enter()
+        
         //define variable to hold downloaded image
         var postImg: UIImage!
         
@@ -477,6 +494,8 @@ class ViewController: UIViewController {
                 print(error ?? "no error")
                 
                 print("couldnt load img")
+                
+                postImg = #imageLiteral(resourceName: "dog-sillouete")
                 
             } else {
                 
