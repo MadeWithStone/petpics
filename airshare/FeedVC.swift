@@ -71,7 +71,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         UserDefaults.standard.removeObject(forKey: "index")
         
         self.tableView.addSubview(self.refControl)
-        
+        self.tableView.reloadData()
         
         
     }

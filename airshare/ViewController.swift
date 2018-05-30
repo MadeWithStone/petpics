@@ -33,6 +33,7 @@ class ViewController: UIViewController {
     var newPosts: [Post] = []
     var postsToSave: [[String:AnyObject]] = [[:]]
     var updatedPostsToSave: [[String:AnyObject]] = [[:]]
+    var cloudPostsCount = 0
     
     func savet(data: [String], forkey: String){
         
@@ -349,7 +350,7 @@ class ViewController: UIViewController {
             
             //create variable with all contents of data snapshot
             guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
-            
+            self.cloudPostsCount = snap.count
             //get local data
             if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
                 
@@ -417,25 +418,26 @@ class ViewController: UIViewController {
         
         //define array to sub images into
         var newData: Dictionary<String,AnyObject>
-        
+        var i: Int = 0
         //loop through posts and download images
         for data in p {
             
             newData = data
             
-            //define userImg variable that contains UIImage
-            downloadImages(url: data["userImg"] as! String, completion: {(img) -> Void in newData["userImg"] = img})
             
-            print("got user image")
+            //define userImg variable that contains UIImage
+            downloadImages(url: data["userImg"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["userImg"] = img; self.updatedPostsToSave[arrayNum]["userImg"] = img; print("got userImg")}
+            
+            
             
             //define postImg variable that contains UIImage
-            downloadImages(url: data["postText"] as! String, completion: {(img) -> Void in newData["postText"] = img})
+            downloadImages(url: data["postText"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["postText"] = img; self.updatedPostsToSave[arrayNum]["postText"] = img; print("got postImg");self.save(val: self.updatedPostsToSave, forkey: "localPosts", arrayNum: arrayNum)}
             
-            print("got post image")
+           
             
             //add posts to array
             updatedPostsToSave.append(newData)
-            
+            i = i + 1
         }
         
         //remove initial value
@@ -443,7 +445,7 @@ class ViewController: UIViewController {
         
         print("donwloaded posts count: ", updatedPostsToSave.count)
         
-        //archive data to save
+        /*//archive data to save
         let dataToSave = NSKeyedArchiver.archivedData(withRootObject: updatedPostsToSave)
         
         //save data
@@ -454,9 +456,12 @@ class ViewController: UIViewController {
         
         print("posts have been saved")
         
+        //transition to feed vc
+        self.performSegue(withIdentifier: "toFeed", sender: nil)*/
+        
     }
     
-    func downloadImages(url: String , completion: @escaping (_ img:UIImage?) -> ()) -> Void {
+    func downloadImages(url: String , arrayNum: Int , completion:@escaping (_ img:UIImage, _ next: Bool, _ arrayNum: Int) -> Void) {
         
         //define variable to hold downloaded image
         var postImg: UIImage!
@@ -486,6 +491,7 @@ class ViewController: UIViewController {
                         
                         print("the current image is: ", postImg)
                         
+                        
                     }
                     
                 } else {
@@ -496,23 +502,35 @@ class ViewController: UIViewController {
                 }
                 
             }
+            completion(postImg, true, arrayNum)
             
         })
         
         //return image to put in view controller
-        handler(UIImage(data: postImg))
+        
         
     }
     
     
     //functions to save and load data
-    func save(val: Array<Dictionary<String,AnyObject>>, forkey: String){
+    func save(val: Array<Dictionary<String,AnyObject>>, forkey: String, arrayNum: Int){
         
-        UserDefaults.standard.set(NSKeyedArchiver.archivedData(withRootObject: val), forKey: forkey)
         
-        print("post download is compelete: ", val)
+        if arrayNum + 1 == cloudPostsCount {
+            
+            UserDefaults.standard.set(NSKeyedArchiver.archivedData(withRootObject: val), forKey: forkey)
+            
+            print("post download is compelete: ", val)
+            
+            
+            
+            self.performSegue(withIdentifier: "toFeed", sender: nil)
+            
+        } else {
+            
+        }
         
-        self.performSegue(withIdentifier: "toFeed", sender: nil)
+        
         
     }
     
