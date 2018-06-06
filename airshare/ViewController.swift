@@ -32,9 +32,13 @@ class ViewController: UIViewController {
     var userId: User!
     var newPosts: [Post] = []
     var postsToSave: [[String:AnyObject]] = [[:]]
-    var updatedPostsToSave: [[String:AnyObject]] = [[:]]
+    var updatedPostsToSave: Array<Dictionary<String,AnyObject>> = [[:]]
     var cloudPostsCount = 0
     let postCompletion = DispatchGroup()
+    
+    struct CodableContainer<T: Codable>: Codable {
+        let item: T
+    }
     
     func savet(data: [String], forkey: String){
         
@@ -353,12 +357,12 @@ class ViewController: UIViewController {
             guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
             self.cloudPostsCount = snap.count
             //get local data
-            if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+            if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? Array<Dictionary<String,AnyObject>> {
                 
                 //un archive local data
-                let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! Array<Dictionary<String,AnyObject>>
+                //let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! Array<Dictionary<String,AnyObject>>
                 
-                print("loaded posts count", localData.count)
+                //print("loaded posts count", localData.count)
                 
                 var i = 0
                 
@@ -369,7 +373,7 @@ class ViewController: UIViewController {
                     let postDict = data.value as? Dictionary<String,AnyObject>
                     
                     //define id of current local post
-                    let idLocal = localData[i]["id"] as? String
+                    let idLocal = loadedData[i]["id"] as? String
                     
                     //define id of current cloud post
                     let idCloud = postDict!["id"] as? String
@@ -448,7 +452,13 @@ class ViewController: UIViewController {
         
         //when all requests are done
         postCompletion.notify(queue: .main){
-            let dataToSave = NSKeyedArchiver.archivedData(withRootObject: self.updatedPostsToSave)
+            
+            for i in self.updatedPostsToSave {
+                let currentPostToSave = Post(postKey: i["id"] as! String, postData: i)
+                self.newPosts.append(currentPostToSave)
+            }
+            
+            let dataToSave = NSKeyedArchiver.archivedData(withRootObject: self.newPosts)
             UserDefaults.standard.set(dataToSave, forKey: "localPosts")
             UserDefaults.standard.synchronize()
             
@@ -612,4 +622,5 @@ extension ViewController: UIImagePickerControllerDelegate, UINavigationControlle
         
     }
 }
+
 

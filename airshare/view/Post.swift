@@ -17,6 +17,7 @@ class Post {
     private var _stars: Int!
     private var _postRef: DatabaseReference!
     private var _date: String!
+    private var _keys: Array<String>!
     
     var username: String {
         return _username
@@ -47,12 +48,17 @@ class Post {
         return _postKey
     }
     
-    init(postText: UIImage, username: String, userImg: UIImage, stars: Int, date: String) {
+    var keys: Array<String> {
+        return _keys
+    }
+    
+    init(postText: UIImage, username: String, userImg: UIImage, stars: Int, date: String, keys: Array<String>) {
         _postText = postText
         _username = username
         _userImg = userImg
         _stars = stars
         _date = date
+        _keys = keys
     }
     
     init(postKey: String, postData: Dictionary<String, AnyObject>) {
@@ -77,6 +83,8 @@ class Post {
         if let date = postData["time"] as? String{
             _date = date
         }
+        
+        if let keys = postData["keys"]
         
         _postRef = Database.database().reference().child("posts").child(_postKey)
     }

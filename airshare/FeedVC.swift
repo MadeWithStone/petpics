@@ -29,8 +29,8 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     var tagged = [[String]]()
     var offset: CGFloat = 0
     var dataForPostView: Dictionary<String, AnyObject>!
-    var dataArray: [Dictionary<String, AnyObject>]!
-    var currentPost: Dictionary<String, AnyObject>!
+    var dataArray = [Post]()
+    var currentPost: Post!
     var userOfWeak: String!
     var userInfo: Dictionary<String, AnyObject> = [:]
     lazy var refControl: UIRefreshControl = {
@@ -72,18 +72,22 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         
         self.tableView.addSubview(self.refControl)
         
-        if let local = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
-            
-            
-            
-            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! Array<Dictionary<String,AnyObject>>
-            
-            dataArray = localPosts
-        }
+        
         initialize()
         self.tableView.reloadData()
         
         
+    }
+    
+    func loadPosts(){
+        if let local = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+            
+            
+            
+            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! [Post]
+            
+            dataArray = localPosts
+        }
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -121,7 +125,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     func initialize(){
         
         
-        dataArray = [["hello":"yes" as AnyObject]]
+        
         //getPosts()
         getVars()
         sortBtn.setTitle("Leaderboard", for: .normal)
@@ -413,10 +417,11 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     
     func makeDictionary(index: Int){
         print(dataArray.count)
+        
         currentPost = dataArray[index-1]
         print(keys)
         print(posts)
-        currentPost["key"] = keys[index-1] as AnyObject
+        currentPost. = keys[index-1] as AnyObject
         print(currentPost)
         
         performSegue(withIdentifier: "toPostView", sender: self)
@@ -460,7 +465,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
             
             print("displaying images")
             print(dataArray)
-            let currentPost = Post(postKey: dataArray[indexPath.row-1]["id"] as! String, postData: dataArray[indexPath.row-1])
+            let currentPost = dataArray[indexPath.row-1]
                 print("configuring cells")
                 cell.configCell(post: currentPost)
             
