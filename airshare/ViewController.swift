@@ -24,6 +24,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var checkbox: UIButton!
     @IBOutlet weak var checkBoxLbl: UILabel!
     @IBOutlet weak var checkView: UIView!
+    @IBOutlet weak var loadingBTN: UIButton!
     
     
     var imagePicker: UIImagePickerController!
@@ -35,10 +36,16 @@ class ViewController: UIViewController {
     var updatedPostsToSave: Array<Dictionary<String,AnyObject>> = [[:]]
     var cloudPostsCount = 0
     let postCompletion = DispatchGroup()
+    private var d: [Post]!
+    private var loadedData: [Post]!
     
-    struct CodableContainer<T: Codable>: Codable {
-        let item: T
-    }
+    
+    
+    // MARK: NSCoding
+    
+    
+    
+    
     
     func savet(data: [String], forkey: String){
         
@@ -141,7 +148,18 @@ class ViewController: UIViewController {
         userImage.center.x = self.view.center.x
         
         checkView.center.x = self.view.center.x
+        loadingBTN.isHidden = true
         
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        postsToSave.removeAll()
+        postsToSave = [[:]]
+        updatedPostsToSave.removeAll()
+        updatedPostsToSave = [[:]]
+        newPosts.removeAll()
+        UserDefaults.standard.removeObject(forKey: "localPosts")
+        loadingBTN.isHidden = true
     }
     
     @IBAction func PPBtn(_ sender: AnyObject){
@@ -347,20 +365,22 @@ class ViewController: UIViewController {
         
     }
     
+    
     func getPosts(){
         
         //Download all cloud posts
-        
+        loadingBTN.isHidden = false
         Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
             
             //create variable with all contents of data snapshot
             guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
             self.cloudPostsCount = snap.count
             //get local data
-            if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? Array<Dictionary<String,AnyObject>> {
+            /*if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
                 
                 //un archive local data
-                //let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! Array<Dictionary<String,AnyObject>>
+                let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! [Post]
+                
                 
                 //print("loaded posts count", localData.count)
                 
@@ -373,7 +393,7 @@ class ViewController: UIViewController {
                     let postDict = data.value as? Dictionary<String,AnyObject>
                     
                     //define id of current local post
-                    let idLocal = loadedData[i]["id"] as? String
+                    let idLocal = localData[i].postKey
                     
                     //define id of current cloud post
                     let idCloud = postDict!["id"] as? String
@@ -393,26 +413,31 @@ class ViewController: UIViewController {
                     
                 }
                 
-            } else {
+            } else {*/
                 
                 //if there are no local posts this code runs
                 for data in snap {
                     
                     //make variable with current cloud post
                     let postDict = data.value as? Dictionary<String,AnyObject>
+                    if postDict!["reported"] as! String != "true" {
+                        //append cloud posts to "postsToSave"
+                        self.postsToSave.append(postDict!)
+                    }
                     
-                    //append cloud posts to "postsToSave"
-                    self.postsToSave.append(postDict!)
                    
                 }
-                
-            }
+                print("count ", self.postsToSave.count)
+            //}
             
             //remove empty first value
             self.postsToSave.remove(at: 0)
             
             //download and sub in UIImages
-            self.getImages(p: self.postsToSave)
+            if let _ = self.postsToSave as? [[String:AnyObject]]{
+                self.getImages(p: self.postsToSave)
+            } else {
+                self.performSegue(withIdentifier: "toFeed", sender: nil)            }
          
         }
         
@@ -438,7 +463,7 @@ class ViewController: UIViewController {
             //define postImg variable that contains UIImage
             downloadImages(url: data["postText"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["postText"] = img; self.updatedPostsToSave[arrayNum]["postText"] = img; print("got postImg");self.postCompletion.leave()}
             
-           
+        
             
             //add posts to array
             updatedPostsToSave.append(newData)
@@ -458,7 +483,12 @@ class ViewController: UIViewController {
                 self.newPosts.append(currentPostToSave)
             }
             
+            
+            //self.d = self.newPosts
+            print("newPosts: ", self.newPosts)
+            
             let dataToSave = NSKeyedArchiver.archivedData(withRootObject: self.newPosts)
+            print("dataToSave: ", dataToSave)
             UserDefaults.standard.set(dataToSave, forKey: "localPosts")
             UserDefaults.standard.synchronize()
             

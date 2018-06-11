@@ -41,7 +41,13 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         return refreshControl
     }()
     public var userId: User!
-    
+    var newPosts: [Post] = []
+    var postsToSave: [[String:AnyObject]] = [[:]]
+    var updatedPostsToSave: Array<Dictionary<String,AnyObject>> = [[:]]
+    var cloudPostsCount = 0
+    let postCompletion = DispatchGroup()
+    private var d: [Post]!
+    private var loadedData: [Post]!
     //IBOutlets
     @IBOutlet weak var sortBtn: UIButton!
     
@@ -55,10 +61,18 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
             sortBtn.setTitle("Feed", for: .normal)
             navigationItem.title = "Leaderboard"
             child = "stars"
+            dataArray.sort{
+                return $0.stars > $1.stars
+            }
+            tableView.reloadData()
         } else if sortBtn.title(for: .normal) == "Feed" {
             sortBtn.setTitle("Leaderboard", for: .normal)
             navigationItem.title = "Feed"
             child = "time"
+            dataArray.sort{
+                return $0.date > $1.date
+            }
+            tableView.reloadData()
         }
         
         //getPosts()
@@ -74,20 +88,27 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         
         
         initialize()
+        loadPosts()
+        updateStars()
+        getPosts()
+        dataArray.sort{
+            return $0.date > $1.date
+        }
         self.tableView.reloadData()
+        //loadPosts()
+        
         
         
     }
     
     func loadPosts(){
-        if let local = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
-            
-            
-            
-            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: local as Data) as! [Post]
+        if let data = UserDefaults.standard.data(forKey: "localPosts"),
+            let localPosts = NSKeyedUnarchiver.unarchiveObject(with: data) as? [Post]{
             
             dataArray = localPosts
+            print("the loaded posts are: ", dataArray)
         }
+        self.tableView.reloadData()
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -172,10 +193,15 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     }
     
     @objc func refresh(_ sender: AnyObject) {
-        //getPosts()
+        UserDefaults.standard.removeObject(forKey: "localPosts")
+        getPosts()
+        dataArray.removeAll()
+        newPosts.removeAll()
+        self.dismiss(animated: false) {
+            self.refreshControl?.endRefreshing()
+        }
+        //self.tableView.reloadData()
         
-        self.tableView.reloadData()
-        refreshControl?.endRefreshing()
     }
     
     //Download Data
@@ -357,7 +383,251 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         
         
     }*/
+    //postText: UIImage, username: String, userImg: UIImage, stars: Int, date: String, keys: Array<String>, reportNum: Int, postKey: String
+    func updateStars(){
+        Database.database().reference().child("textPosts").observe(.childChanged) { (snapshot) in
+            
+            let child = snapshot.value as? Dictionary<String,AnyObject>
+            
+            var num = 0
+            print("the child is: ", child)
+                
+                for i in self.dataArray {
+                    
+                    if i.postKey == child!["id"] as! String {
+                        
+                        var currentPostToUpdate: Dictionary<String,AnyObject> = [:]
+                        
+                        currentPostToUpdate["postText"] = i.postText
+                        currentPostToUpdate["username"] = i.username as AnyObject
+                        currentPostToUpdate["userImg"] = i.userImg
+                        currentPostToUpdate["stars"] = child?["stars"]
+                        currentPostToUpdate["time"] = i.date as AnyObject
+                        currentPostToUpdate["users"] = child?["users"]
+                        currentPostToUpdate["reportNum"] = child?["reportNum"]
+                        currentPostToUpdate["id"] = i.postKey as AnyObject
+                        
+                        let currentPostToAdd: Post = Post(postKey: currentPostToUpdate["id"] as! String, postData: currentPostToUpdate)
+                        
+                        self.self.dataArray[num] = currentPostToAdd
+                        
+                        
+                        
+                    }
+                    num = num + 1
+                }
+                
+            
+                
+            
+            let dataToStore = NSKeyedArchiver.archivedData(withRootObject: self.dataArray)
+            UserDefaults.standard.set(dataToStore, forKey: "localPosts")
+            UserDefaults.standard.synchronize()
+            self.loadPosts()
+            
+            
+        }
+    }
     
+    func getPosts(){
+        
+        /*//Download all cloud posts
+        
+        Database.database().reference().child("textPosts").observe(.childAdded) { (snapshot) in
+            
+            //create variable with all contents of data snapshot
+            guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
+            self.cloudPostsCount = snap.count
+            //get local data
+            /*if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+                
+                //un archive local data
+                let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! [Post]
+                
+                
+                //print("loaded posts count", localData.count)
+                
+                var i = 0
+                
+                //loop through cloud data
+                for data in snap {
+                    
+                    //make variable with current cloud post
+                    let postDict = data.value as? Dictionary<String,AnyObject>
+                    
+                    //define id of current local post
+                    let idLocal = localData[i].postKey
+                    
+                    //define id of current cloud post
+                    let idCloud = postDict!["id"] as? String
+                    
+                    //check if ids are the same
+                    if idLocal != idCloud {
+                        
+                        //append only new posts to "postsToSave"
+                        self.postsToSave.append(postDict!)
+                        
+                    } else {
+                        //what to do if the ids do not match
+                        
+                    }
+                    
+                    i = i + 1
+                    
+                }
+                
+            } else {*/
+                
+                //if there are no local posts this code runs
+                for data in snap {
+                    
+                    //make variable with current cloud post
+                    let postDict = data.value as? Dictionary<String,AnyObject>
+                    print("the snap is ", snap)
+                    //append cloud posts to "postsToSave"
+                    self.postsToSave.append(postDict!)
+                    
+                }
+                
+            //}
+            
+            //remove empty first value
+            self.postsToSave.remove(at: 0)
+            
+            //download and sub in UIImages
+            if let _ = self.postsToSave as? [[String:AnyObject]]{
+                self.getImages(p: self.postsToSave)
+            } else {
+                self.refreshControl?.endRefreshing()
+            }
+        }*/
+        
+    }
+    
+    
+    func getImages(p: Array<Dictionary<String,AnyObject>>) {
+        
+        //define array to sub images into
+        var newData: Dictionary<String,AnyObject>
+        var i: Int = 0
+        //loop through posts and download images
+        for data in p {
+            
+            newData = data
+            
+            
+            //define userImg variable that contains UIImage
+            downloadImages(url: data["userImg"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["userImg"] = img; self.updatedPostsToSave[arrayNum]["userImg"] = img; print("got userImg"); self.postCompletion.leave()}
+            
+            
+            
+            //define postImg variable that contains UIImage
+            downloadImages(url: data["postText"] as! String, arrayNum: i) {(img, next, arrayNum) -> Void in newData["postText"] = img; self.updatedPostsToSave[arrayNum]["postText"] = img; print("got postImg");self.postCompletion.leave()}
+            
+            
+            
+            //add posts to array
+            updatedPostsToSave.append(newData)
+            i = i + 1
+        }
+        
+        //remove initial value
+        updatedPostsToSave.remove(at: 0)
+        
+        print("downloaded posts count: ", updatedPostsToSave.count)
+        
+        //when all requests are done
+        postCompletion.notify(queue: .main){
+            
+            for i in self.updatedPostsToSave {
+                let currentPostToSave = Post(postKey: i["id"] as! String, postData: i)
+                self.newPosts.append(currentPostToSave)
+            }
+            
+            
+            //self.d = self.newPosts
+            let dataToSave = NSKeyedArchiver.archivedData(withRootObject: self.newPosts)
+            UserDefaults.standard.set(dataToSave, forKey: "localPosts")
+            UserDefaults.standard.synchronize()
+            self.refreshControl?.endRefreshing()
+            self.tableView.reloadData()
+            print("post download is compelete: ")
+            
+            
+            
+            
+        }
+        
+        /*//archive data to save
+         let dataToSave = NSKeyedArchiver.archivedData(withRootObject: updatedPostsToSave)
+         
+         //save data
+         UserDefaults.standard.set(dataToSave, forKey: "localPosts")
+         
+         //synchronize data
+         UserDefaults.standard.synchronize()
+         
+         print("posts have been saved")
+         
+         //transition to feed vc
+         self.performSegue(withIdentifier: "toFeed", sender: nil)*/
+        
+    }
+    
+    func downloadImages(url: String , arrayNum: Int , completion:@escaping (_ img:UIImage, _ next: Bool, _ arrayNum: Int) -> Void) {
+        
+        //enter dispatch group
+        postCompletion.enter()
+        
+        //define variable to hold downloaded image
+        var postImg: UIImage!
+        
+        //define Firebase Storage reference
+        let ref = Storage.storage().reference(forURL: url)
+        
+        //download images
+        ref.getData(maxSize: 100000000, completion: { (data, error) in
+            
+            if error != nil {
+                
+                print(error ?? "no error")
+                
+                print("couldnt load img")
+                
+                postImg = #imageLiteral(resourceName: "dog-sillouete")
+                
+            } else {
+                
+                //if there is an image
+                if let imgData = data {
+                    
+                    //get the UIImage of the download
+                    if let img = UIImage(data: imgData){
+                        
+                        //put image in variable "img"
+                        postImg = img
+                        
+                        print("the current image is: ", postImg)
+                        
+                        
+                    }
+                    
+                } else {
+                    
+                    //if there is now image to download sub in this image
+                    postImg = #imageLiteral(resourceName: "dog-sillouete")
+                    
+                }
+                
+            }
+            completion(postImg, true, arrayNum)
+            
+        })
+        
+        //return image to put in view controller
+        
+        
+    }
    
     
     
@@ -421,7 +691,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
         currentPost = dataArray[index-1]
         print(keys)
         print(posts)
-        currentPost. = keys[index-1] as AnyObject
+        //currentPost.keys = keys[index-1] as AnyObject
         print(currentPost)
         
         performSegue(withIdentifier: "toPostView", sender: self)

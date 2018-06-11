@@ -18,15 +18,15 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
     @IBOutlet weak var userImgView: UIImageView!
     @IBOutlet weak var usernameLbl: UILabel!
     
-    public var data: Dictionary<String, AnyObject>!
+    public var data: Post!
     var users: Array<String> = []
     public var interstitial: GADInterstitial!
     public var user: String!
     var myUsername: String!
     
     override func viewDidLoad() {
-        let username = data["username"]
-        usernameLbl.text = username as? String
+        let username = data.username
+        usernameLbl.text = username
         wagLbl.backgroundColor = hexStringToUIColor(hex: "9B9393")
         loadImgs()
         wagBtn.setTitleColor(hexStringToUIColor(hex: "D10808"), for: .normal)
@@ -57,9 +57,10 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
     func starInit(){
         let username = UserDefaults.standard.value(forKey: "username") as? String
         print(username ?? "no username")
-        let key = data["key"] as? String
+        print(data.postKey)
+        let key = data.postKey
         
-        Database.database().reference().child("textPosts").child(key!).child("users").observe(.value) { (snapshot) in
+        Database.database().reference().child("textPosts").child(key).child("users").observe(.value) { (snapshot) in
             print(snapshot)
             if let myUsers = snapshot.value as? Array<String> {
                 var i = 0
@@ -76,7 +77,7 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
             
         }
         
-        Database.database().reference().child("textPosts").child(key!).child("stars").observe(.value) { (snapshot) in
+        Database.database().reference().child("textPosts").child(key).child("stars").observe(.value) { (snapshot) in
             print(snapshot)
             if let starAmount = snapshot.value as? Int {
                 self.wagLbl.text = "Wags: " + String(starAmount)
@@ -117,20 +118,20 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
     func wagChange(){
         let username = Auth.auth().currentUser?.uid
         
-        let key = data["key"] as? String
-        let newStars = (data["stars"] as? Int)! + 1
+        let key = data.postKey
+        let newStars = (data.stars) + 1
         var theUsers = users
         theUsers.append(username!)
-        if wagLbl.backgroundColor == hexStringToUIColor(hex: "9B9393") && key != nil{
-            Database.database().reference().child("textPosts").child(key!).updateChildValues(["users" : theUsers])
-            Database.database().reference().child("textPosts").child(key!).updateChildValues(["stars" : newStars])
+        if wagLbl.backgroundColor == hexStringToUIColor(hex: "9B9393"){
+            Database.database().reference().child("textPosts").child(key).updateChildValues(["users" : theUsers])
+            Database.database().reference().child("textPosts").child(key).updateChildValues(["stars" : newStars])
         } else {
             if user == myUsername {
-                Database.database().reference().child("textPosts").child(key!).updateChildValues(["stars" : newStars])
+                Database.database().reference().child("textPosts").child(key).updateChildValues(["stars" : newStars])
             } else if interstitial.isReady {
                 interstitial.present(fromRootViewController: self)
             }
-            print("the key is: ", key!)
+            print("the key is: ", key)
             print("the users are: ", theUsers)
         }
         starInit()
@@ -138,7 +139,7 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
     
     
     func loadImgs(){
-        if data["postText"] != nil {
+        /*if data.postText != nil {
             let reft = Storage.storage().reference(forURL: data["postText"] as! String)
             reft.getData(maxSize: 100000000, completion: { (data, error) in
                 if error != nil {
@@ -168,7 +169,9 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
                     }
                 }
             })
-        }
+        }*/
+        self.userImgView.image = data.userImg
+        self.postImgView.image = data.postText
     }
     
     @IBAction func reportPost(_ sender: AnyObject){
@@ -178,16 +181,16 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
     
     
     func rp(){
-        let id = self.data["id"] as? String
+        let id = self.data.postKey
             //1. Create the alert controller.
             let alert = UIAlertController(title: "Why are you reporting this post?", message: "", preferredStyle: .alert)
             
             // 3. Grab the value from the text field, and print it when the user clicks OK.
         
         alert.addAction(UIAlertAction(title: "Inappropriate Content", style: .default, handler: {  (_) in
-            Database.database().reference().child("textPosts").child(id!).updateChildValues(["reportedNum" : 4])
-            Database.database().reference().child("textPosts").child(id!).updateChildValues(["reported" : "true"])
-            
+            Database.database().reference().child("textPosts").child(id).updateChildValues(["reportedNum" : 4])
+            Database.database().reference().child("textPosts").child(id).updateChildValues(["reported" : "true"])
+            self.dismiss(animated: false, completion: nil)
             
         }))
             alert.addAction(UIAlertAction(title: "Copyright Infringement", style: .default, handler: {  (_) in
@@ -198,7 +201,7 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
                 // 3. Grab the value from the text field, and print it when the user clicks OK.
                 
                 alert.addAction(UIAlertAction(title: "Done", style: .default, handler: {  (_) in
-                    self.report(id: id!)
+                    self.report(id: id)
                 }))
                 
                 
@@ -211,7 +214,7 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
         
         alert.addAction(UIAlertAction(title: "Violation of Terms of Use", style: .default, handler: {  (_) in
             
-            self.report(id: id!)
+            self.report(id: id)
             
             
             
@@ -230,13 +233,13 @@ class PostFuncVC: UIViewController, GADInterstitialDelegate {
     
     func report(id: String){
         print(time)
-        let reportNum = data["reportedNum"] as? Int
-        if reportNum != nil {
-            if reportNum! < 3 {
-                Database.database().reference().child("textPosts").child(id).updateChildValues(["reportedNum" : reportNum! + 1])
+        let reportNum = data.reportNum
+        if reportNum != 0 {
+            if reportNum < 3 {
+                Database.database().reference().child("textPosts").child(id).updateChildValues(["reportedNum" : reportNum + 1])
                 Database.database().reference().child("textPosts").child(id).updateChildValues(["reported" : "false"])
-            } else if reportNum! >= 3 {
-                Database.database().reference().child("textPosts").child(id).updateChildValues(["reportedNum" : reportNum! + 1])
+            } else if reportNum >= 3 {
+                Database.database().reference().child("textPosts").child(id).updateChildValues(["reportedNum" : reportNum + 1])
                 Database.database().reference().child("textPosts").child(id).updateChildValues(["reported" : "true"])
                 
             }
