@@ -262,17 +262,27 @@
                                     <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </state>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cdd-Lq-O9y">
+                                <rect key="frame" x="0.0" y="86" width="375" height="714"/>
+                                <color key="backgroundColor" red="0.81960784310000001" green="0.031372549020000001" blue="0.031372549020000001" alpha="1" colorSpace="calibratedRGB"/>
+                                <state key="normal" title="Signing In...">
+                                    <color key="titleColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                </state>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" red="0.81960784310000001" green="0.031372549020000001" blue="0.031372549020000001" alpha="1" colorSpace="calibratedRGB"/>
                         <constraints>
+                            <constraint firstItem="Cdd-Lq-O9y" firstAttribute="leading" secondItem="NpM-mO-LYC" secondAttribute="leading" id="1BP-Bj-t5z"/>
                             <constraint firstItem="p5b-h6-kpN" firstAttribute="top" secondItem="kw2-Jv-zfD" secondAttribute="bottom" constant="8" id="2wH-so-Q4c"/>
                             <constraint firstItem="XB3-VC-Mr0" firstAttribute="bottom" secondItem="NpM-mO-LYC" secondAttribute="bottom" id="8sb-7S-p2G"/>
+                            <constraint firstItem="Cdd-Lq-O9y" firstAttribute="top" secondItem="kw2-Jv-zfD" secondAttribute="bottom" id="9pk-v4-8Wv"/>
                             <constraint firstItem="NpM-mO-LYC" firstAttribute="trailing" secondItem="1NZ-lE-Ln4" secondAttribute="trailing" constant="8" id="9ww-v7-apc"/>
                             <constraint firstItem="NpM-mO-LYC" firstAttribute="trailing" secondItem="p5b-h6-kpN" secondAttribute="trailing" constant="8" id="IkK-SN-kFs"/>
                             <constraint firstItem="NpM-mO-LYC" firstAttribute="trailing" secondItem="kw2-Jv-zfD" secondAttribute="trailing" constant="8" id="JRR-Zb-ua0"/>
                             <constraint firstItem="XB3-VC-Mr0" firstAttribute="trailing" secondItem="NpM-mO-LYC" secondAttribute="trailing" id="KES-hC-dR5"/>
                             <constraint firstItem="lGM-pG-x4d" firstAttribute="leading" secondItem="NpM-mO-LYC" secondAttribute="leading" id="Ojb-0C-bwK"/>
                             <constraint firstItem="XB3-VC-Mr0" firstAttribute="leading" secondItem="NpM-mO-LYC" secondAttribute="leading" id="SwL-DS-PMS"/>
+                            <constraint firstItem="NpM-mO-LYC" firstAttribute="bottom" secondItem="Cdd-Lq-O9y" secondAttribute="bottom" id="aF4-Rv-JMC"/>
                             <constraint firstItem="kw2-Jv-zfD" firstAttribute="top" secondItem="NpM-mO-LYC" secondAttribute="top" id="i9V-7s-iux"/>
                             <constraint firstItem="lGM-pG-x4d" firstAttribute="top" secondItem="kw2-Jv-zfD" secondAttribute="bottom" id="kGZ-Qf-fEh"/>
                             <constraint firstItem="1NZ-lE-Ln4" firstAttribute="top" secondItem="p5b-h6-kpN" secondAttribute="bottom" constant="8" id="kHk-qK-gNR"/>
@@ -280,6 +290,7 @@
                             <constraint firstItem="1NZ-lE-Ln4" firstAttribute="leading" secondItem="NpM-mO-LYC" secondAttribute="leading" constant="8" id="pcu-aH-b1j"/>
                             <constraint firstItem="p5b-h6-kpN" firstAttribute="leading" secondItem="NpM-mO-LYC" secondAttribute="leading" constant="8" id="tvs-Ln-Iea"/>
                             <constraint firstItem="kw2-Jv-zfD" firstAttribute="leading" secondItem="NpM-mO-LYC" secondAttribute="leading" constant="8" id="ty8-6L-Pg7"/>
+                            <constraint firstItem="NpM-mO-LYC" firstAttribute="trailing" secondItem="Cdd-Lq-O9y" secondAttribute="trailing" id="vG3-lR-m44"/>
                             <constraint firstItem="XB3-VC-Mr0" firstAttribute="top" secondItem="1NZ-lE-Ln4" secondAttribute="bottom" constant="8" id="vJ5-cc-49E"/>
                             <constraint firstAttribute="bottom" secondItem="lGM-pG-x4d" secondAttribute="bottom" id="wsi-fj-t4A"/>
                         </constraints>
@@ -297,6 +308,7 @@
                         <outlet property="password" destination="Gle-q2-Bqs" id="4zU-Zd-3uq"/>
                         <outlet property="plusphoto" destination="Ax2-iS-V96" id="PnO-14-EJQ"/>
                         <outlet property="signUpLbl" destination="bU9-ox-CwQ" id="tCB-41-WLc"/>
+                        <outlet property="signingBTN" destination="Cdd-Lq-O9y" id="Qyi-qC-fcD"/>
                         <outlet property="userImage" destination="1pg-Po-FKP" id="7BW-wC-R1o"/>
                         <outlet property="username" destination="5qd-ac-pd7" id="AZZ-Nz-jdI"/>
                         <segue destination="yOE-Gt-CzI" kind="show" identifier="toFeed" id="9Lz-vS-viU"/>

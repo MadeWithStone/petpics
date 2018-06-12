@@ -193,7 +193,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     }
     
     @objc func refresh(_ sender: AnyObject) {
-        UserDefaults.standard.removeObject(forKey: "localPosts")
+        //UserDefaults.standard.removeObject(forKey: "localPosts")
         getPosts()
         dataArray.removeAll()
         newPosts.removeAll()

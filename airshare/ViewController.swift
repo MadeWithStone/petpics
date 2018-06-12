@@ -25,6 +25,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var checkBoxLbl: UILabel!
     @IBOutlet weak var checkView: UIView!
     @IBOutlet weak var loadingBTN: UIButton!
+    @IBOutlet weak var signingBTN: UIButton!
     
     
     var imagePicker: UIImagePickerController!
@@ -35,10 +36,11 @@ class ViewController: UIViewController {
     var postsToSave: [[String:AnyObject]] = [[:]]
     var updatedPostsToSave: Array<Dictionary<String,AnyObject>> = [[:]]
     var cloudPostsCount = 0
+    var localPosts: [Post]!
     let postCompletion = DispatchGroup()
     private var d: [Post]!
     private var loadedData: [Post]!
-    
+    var addTo: Bool!
     
     
     // MARK: NSCoding
@@ -56,54 +58,57 @@ class ViewController: UIViewController {
     }
     
     func loadt(forkey: String) {
-        
-        if let data = UserDefaults.standard.value(forKey: forkey) as? [String] {
-            
-            Auth.auth().signIn(withEmail: data[0], password: data[1], completion: { (user, err) in
-                
-                if err != nil {
+        if Auth.auth().currentUser == nil {
+            if let data = (UserDefaults.standard.value(forKey: forkey) as? [String]) {
+                self.signingBTN.isHidden = false
+                Auth.auth().signIn(withEmail: data[0], password: data[1], completion: { (user, err) in
                     
-                    let alert = UIAlertController(title: "Error Signing In", message: "Please try again", preferredStyle: .alert)
-                    
-                    alert.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: { (action: UIAlertAction!) in
-                        print("Handle Cancel Logic here")
-                        UserDefaults.standard.removeObject(forKey: "uid")
-                    }))
-                    
-                    self.present(alert, animated: true, completion: nil)
-                    
-                } else if user?.isEmailVerified == true {
-                    
-                    self.getPosts()
-                    
-                    Messaging.messaging().subscribe(toTopic: "newPost")
-                    
-                    print("Subscribed to newPost")
-                    
-                    self.userId = user
-                    
-                } else {
-                    
-                    let alert = UIAlertController(title: "Verification Error", message: "You must first verify your email.", preferredStyle: .alert)
-                    
-                    alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: {  (_) in
-                        alert.dismiss(animated: true, completion: nil)
-                    }))
-                    
-                    alert.addAction(UIAlertAction(title: "Resend Verification Email", style: .default, handler: {  (_) in
-                        user?.sendEmailVerification(completion: { (error) in
+                    if err != nil {
+                        
+                        let alert = UIAlertController(title: "Error Signing In", message: "Please try again", preferredStyle: .alert)
+                        
+                        alert.addAction(UIAlertAction(title: "Ok", style: .cancel, handler: { (action: UIAlertAction!) in
+                            print("Handle Cancel Logic here")
+                            UserDefaults.standard.removeObject(forKey: "uid")
+                        }))
+                        
+                        self.present(alert, animated: true, completion: nil)
+                        
+                    } else if user?.isEmailVerified == true {
+                        
+                        self.getPosts()
+                        
+                        Messaging.messaging().subscribe(toTopic: "newPost")
+                        
+                        print("Subscribed to newPost")
+                        
+                        self.userId = user
+                        
+                    } else {
+                        
+                        let alert = UIAlertController(title: "Verification Error", message: "You must first verify your email.", preferredStyle: .alert)
+                        
+                        alert.addAction(UIAlertAction(title: "Ok", style: .default, handler: {  (_) in
                             alert.dismiss(animated: true, completion: nil)
-                        })
-                    }))
+                        }))
+                        
+                        alert.addAction(UIAlertAction(title: "Resend Verification Email", style: .default, handler: {  (_) in
+                            user?.sendEmailVerification(completion: { (error) in
+                                alert.dismiss(animated: true, completion: nil)
+                            })
+                        }))
+                        
+                        self.present(alert, animated: true, completion: nil)
+                        
+                        print("present code has run")
+                        
+                    }
                     
-                    self.present(alert, animated: true, completion: nil)
-                    
-                    print("present code has run")
-                    
-                }
+                })
                 
-            })
-            
+            }
+        } else if Auth.auth().currentUser != nil {
+            getPosts()
         }
         
     }
@@ -125,7 +130,7 @@ class ViewController: UIViewController {
         
         super.viewDidLoad()
         
-        UserDefaults.standard.removeObject(forKey: "localPosts")
+        
         
         imagePicker = UIImagePickerController()
         
@@ -158,8 +163,9 @@ class ViewController: UIViewController {
         updatedPostsToSave.removeAll()
         updatedPostsToSave = [[:]]
         newPosts.removeAll()
-        UserDefaults.standard.removeObject(forKey: "localPosts")
+        //UserDefaults.standard.removeObject(forKey: "localPosts")
         loadingBTN.isHidden = true
+        signingBTN.isHidden = true
     }
     
     @IBAction func PPBtn(_ sender: AnyObject){
@@ -223,7 +229,7 @@ class ViewController: UIViewController {
     @IBAction func signInBtn(_ sender: Any) {
         
         if let e = email.text, let pass = password.text{
-            
+            self.signingBTN.isHidden = false
             Auth.auth().signIn(withEmail: e, password: pass) { (user, error) in
                 
                 if error != nil && !(self.username.text?.isEmpty)! && self.userImage.image != nil && self.checkBox.backgroundImage(for: .normal) == #imageLiteral(resourceName: "check") {
@@ -243,7 +249,7 @@ class ViewController: UIViewController {
                             }))
                             
                             self.present(alert, animated: true, completion: nil)
-                            
+                            self.signingBTN.isHidden = true
                         } else {
                             
                             self.uid = (user?.uid)!
@@ -257,6 +263,7 @@ class ViewController: UIViewController {
                             //KeychainWrapper.standard.set((user?.uid)!, forKey: "KEY_UID")
                             
                             print("This is the key: "  + (user?.uid)!)
+                            
                             
                         }
                         
@@ -274,7 +281,7 @@ class ViewController: UIViewController {
                         
                     }
                 } else if user?.isEmailVerified == true{
-                    
+                    self.signingBTN.isHidden = true
                     if (user?.uid) != nil {
                         
                         Messaging.messaging().subscribe(toTopic: "newPost")
@@ -287,7 +294,7 @@ class ViewController: UIViewController {
                         
                         //KeychainWrapper.standard.set((userUID), forKey: "KEY_UID")
                         
-                        self.performSegue(withIdentifier: "toFeed", sender: nil)
+                        self.getPosts()
                         
                     }
                 
@@ -367,7 +374,7 @@ class ViewController: UIViewController {
     
     
     func getPosts(){
-        
+        self.signingBTN.isHidden = true
         //Download all cloud posts
         loadingBTN.isHidden = false
         Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
@@ -376,45 +383,67 @@ class ViewController: UIViewController {
             guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
             self.cloudPostsCount = snap.count
             //get local data
-            /*if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
+            if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
                 
                 //un archive local data
                 let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! [Post]
-                
+                self.localPosts = localData
                 
                 //print("loaded posts count", localData.count)
                 
                 var i = 0
-                
-                //loop through cloud data
-                for data in snap {
-                    
-                    //make variable with current cloud post
-                    let postDict = data.value as? Dictionary<String,AnyObject>
-                    
-                    //define id of current local post
-                    let idLocal = localData[i].postKey
-                    
-                    //define id of current cloud post
-                    let idCloud = postDict!["id"] as? String
-                    
-                    //check if ids are the same
-                    if idLocal != idCloud {
+                if localData.count == snap.count {
+                    print("no new posts to download")
+                } else if localData.count > snap.count{
+                    UserDefaults.standard.removeObject(forKey: "localPosts")
+                    self.addTo = false
+                    //if there are no local posts this code runs
+                    for data in snap {
                         
-                        //append only new posts to "postsToSave"
-                        self.postsToSave.append(postDict!)
+                        //make variable with current cloud post
+                        let postDict = data.value as? Dictionary<String,AnyObject>
+                        if postDict!["reported"] as! String != "true" {
+                            //append cloud posts to "postsToSave"
+                            self.postsToSave.append(postDict!)
+                        }
                         
-                    } else {
-                        //what to do if the ids do not match
                         
                     }
-                    
-                    i = i + 1
-                    
+                    print("count ", self.postsToSave.count)
+                }else {
+                    print("only downloading new posts")
+                    self.addTo = true
+                    for data in snap {
+                        
+                        //make variable with current cloud post
+                        let postDict = data.value as? Dictionary<String,AnyObject>
+                        
+                        //define id of current local post
+                        let idLocal = localData[i].postKey
+                        
+                        //define id of current cloud post
+                        let idCloud = postDict!["id"] as? String
+                        
+                        //check if ids are the same
+                        if idLocal != idCloud {
+                            
+                            //append only new posts to "postsToSave"
+                            self.postsToSave.append(postDict!)
+                            
+                        } else {
+                            //what to do if the ids do not match
+                            
+                        }
+                        
+                        i = i + 1
+                        
+                    }
                 }
+                //loop through cloud data
                 
-            } else {*/
                 
+            } else {
+                self.addTo = false
                 //if there are no local posts this code runs
                 for data in snap {
                     
@@ -428,23 +457,26 @@ class ViewController: UIViewController {
                    
                 }
                 print("count ", self.postsToSave.count)
-            //}
+            }
             
             //remove empty first value
             self.postsToSave.remove(at: 0)
             
             //download and sub in UIImages
-            if let _ = self.postsToSave as? [[String:AnyObject]]{
-                self.getImages(p: self.postsToSave)
+            if self.postsToSave.count != 0 {
+                self.getImages(p: self.postsToSave, addTo: self.addTo)
             } else {
-                self.performSegue(withIdentifier: "toFeed", sender: nil)            }
+                self.performSegue(withIdentifier: "toFeed", sender: nil)
+            }
+                
+                
          
         }
         
     }
     
     
-    func getImages(p: Array<Dictionary<String,AnyObject>>) {
+    func getImages(p: Array<Dictionary<String,AnyObject>>, addTo: Bool) {
         
         //define array to sub images into
         var newData: Dictionary<String,AnyObject>
@@ -486,6 +518,13 @@ class ViewController: UIViewController {
             
             //self.d = self.newPosts
             print("newPosts: ", self.newPosts)
+            if addTo == true {
+                for d in self.localPosts {
+                    self.newPosts.append(d)
+                }
+            } else {
+                
+            }
             
             let dataToSave = NSKeyedArchiver.archivedData(withRootObject: self.newPosts)
             print("dataToSave: ", dataToSave)
