@@ -18,6 +18,7 @@ class PostCell: UITableViewCell {
     @IBOutlet weak var starsLbl: UILabel!
     @IBOutlet weak var dateLbl: UILabel!
     @IBOutlet weak var loadingLbl: UILabel!
+    @IBOutlet weak var pictureFrameImg: UIImageView!
     
     var post: Post!
 
@@ -84,6 +85,12 @@ class PostCell: UITableViewCell {
         
         
             self.userImg.image = post.userImg
+        if post.frame == 1 {
+            
+            pictureFrameImg.image = #imageLiteral(resourceName: "fireworks")
+            
+        }
+        
         
         
         

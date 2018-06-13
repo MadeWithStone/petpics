@@ -32,14 +32,14 @@ class ViewController: UIViewController {
     var selectedImage: UIImage!
     var uid = ""
     var userId: User!
-    var newPosts: [Post] = []
+    var newPosts = [Post]()
     var postsToSave: [[String:AnyObject]] = [[:]]
     var updatedPostsToSave: Array<Dictionary<String,AnyObject>> = [[:]]
     var cloudPostsCount = 0
-    var localPosts: [Post]!
+    var localPosts = [Post]()
     let postCompletion = DispatchGroup()
-    private var d: [Post]!
-    private var loadedData: [Post]!
+    private var d = [Post]()
+    private var loadedData = [Post]()
     var addTo: Bool!
     
     
@@ -377,6 +377,7 @@ class ViewController: UIViewController {
         self.signingBTN.isHidden = true
         //Download all cloud posts
         loadingBTN.isHidden = false
+        
         Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
             
             //create variable with all contents of data snapshot
@@ -384,9 +385,13 @@ class ViewController: UIViewController {
             self.cloudPostsCount = snap.count
             //get local data
             if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
-                
+                print("did it break")
                 //un archive local data
+                //print(loadedData)
                 let localData = NSKeyedUnarchiver.unarchiveObject(with: loadedData as Data) as! [Post]
+               
+                
+                
                 self.localPosts = localData
                 
                 //print("loaded posts count", localData.count)
@@ -475,6 +480,7 @@ class ViewController: UIViewController {
                 
                 
             } else {
+                
                 print("no loaded posts")
                 self.addTo = false
                 //if there are no local posts this code runs
@@ -544,7 +550,13 @@ class ViewController: UIViewController {
         postCompletion.notify(queue: .main){
             
             for i in self.updatedPostsToSave {
-                let currentPostToSave = Post(postKey: i["id"] as! String, postData: i)
+                var s = i
+                if s["frame"] == nil {
+                    s["frame"] = 0 as AnyObject
+                }
+                
+                let currentPostToSave = Post(postKey: s["id"] as! String, postData: s)
+                
                 self.newPosts.append(currentPostToSave)
             }
             

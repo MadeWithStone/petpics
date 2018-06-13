@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13771" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="J8S-UE-3lW">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="J8S-UE-3lW">
     <device id="retina4_7" orientation="portrait">
         <adaptation id="fullscreen"/>
     </device>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13772"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="13174"/>
         <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
@@ -351,7 +351,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="375" height="554"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" red="0.81960784310000001" green="0.031372549020000001" blue="0.031372549020000001" alpha="1" colorSpace="calibratedRGB"/>
-                        <view key="tableHeaderView" contentMode="scaleToFill" misplaced="YES" id="pbr-YZ-fqG">
+                        <view key="tableHeaderView" contentMode="scaleToFill" id="pbr-YZ-fqG">
                             <rect key="frame" x="0.0" y="0.0" width="375" height="50"/>
                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             <subviews>
@@ -476,18 +476,27 @@
                                             <color key="textColor" red="0.60784313729999995" green="0.57647058819999997" blue="0.57647058819999997" alpha="1" colorSpace="calibratedRGB"/>
                                             <nil key="highlightedColor"/>
                                         </label>
+                                        <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" translatesAutoresizingMaskIntoConstraints="NO" id="iYd-l0-Ggf">
+                                            <rect key="frame" x="50" y="51" width="120" height="120"/>
+                                            <constraints>
+                                                <constraint firstAttribute="width" secondItem="iYd-l0-Ggf" secondAttribute="height" multiplier="1:1" id="wx0-PL-Aa3"/>
+                                            </constraints>
+                                        </imageView>
                                     </subviews>
                                     <constraints>
                                         <constraint firstItem="1tb-ar-mzl" firstAttribute="top" secondItem="E58-oQ-e5e" secondAttribute="bottom" constant="8" id="7TQ-GQ-I4S"/>
+                                        <constraint firstItem="iYd-l0-Ggf" firstAttribute="centerX" secondItem="3BG-9J-Wsa" secondAttribute="centerX" id="84v-lA-cKS"/>
                                         <constraint firstItem="j9c-lJ-ge6" firstAttribute="leading" secondItem="3BG-9J-Wsa" secondAttribute="trailing" constant="4" id="8lb-qj-DKp"/>
                                         <constraint firstItem="3BG-9J-Wsa" firstAttribute="top" secondItem="uCQ-Gd-YEs" secondAttribute="top" constant="11" id="GJt-y2-qw0"/>
                                         <constraint firstItem="3BG-9J-Wsa" firstAttribute="leading" secondItem="uCQ-Gd-YEs" secondAttribute="leading" constant="10" id="KaS-71-zNr"/>
                                         <constraint firstAttribute="trailing" secondItem="j9c-lJ-ge6" secondAttribute="trailing" constant="12" id="Khe-gY-52C"/>
                                         <constraint firstItem="j9c-lJ-ge6" firstAttribute="top" secondItem="1tb-ar-mzl" secondAttribute="bottom" constant="8" id="RjL-0v-qC2"/>
+                                        <constraint firstItem="1tb-ar-mzl" firstAttribute="leading" secondItem="iYd-l0-Ggf" secondAttribute="trailing" constant="44" id="TtS-dO-rD9"/>
                                         <constraint firstAttribute="bottom" secondItem="3BG-9J-Wsa" secondAttribute="bottom" constant="8.5" id="Veg-SE-psl"/>
                                         <constraint firstItem="E58-oQ-e5e" firstAttribute="trailing" secondItem="uCQ-Gd-YEs" secondAttribute="trailingMargin" id="WOs-NF-7BJ"/>
                                         <constraint firstItem="CKp-NP-5R5" firstAttribute="leading" secondItem="3BG-9J-Wsa" secondAttribute="trailing" constant="28" id="YTC-W8-7Ys"/>
                                         <constraint firstAttribute="trailing" secondItem="1tb-ar-mzl" secondAttribute="trailing" constant="12" id="b7D-pc-L1P"/>
+                                        <constraint firstItem="iYd-l0-Ggf" firstAttribute="centerY" secondItem="3BG-9J-Wsa" secondAttribute="centerY" id="dDq-et-ece"/>
                                         <constraint firstItem="1tb-ar-mzl" firstAttribute="leading" secondItem="3BG-9J-Wsa" secondAttribute="trailing" constant="4" id="sRX-1Q-9da"/>
                                         <constraint firstItem="E58-oQ-e5e" firstAttribute="top" secondItem="CKp-NP-5R5" secondAttribute="bottom" constant="8" id="ten-8Q-r7R"/>
                                         <constraint firstItem="E58-oQ-e5e" firstAttribute="leading" secondItem="3BG-9J-Wsa" secondAttribute="trailing" constant="8" id="u1A-VP-qHd"/>
@@ -498,7 +507,8 @@
                                 <gestureRecognizers/>
                                 <connections>
                                     <outlet property="dateLbl" destination="j9c-lJ-ge6" id="Zwy-f1-eJS"/>
-                                    <outlet property="postImg" destination="3BG-9J-Wsa" id="S0a-34-8RS"/>
+                                    <outlet property="pictureFrameImg" destination="3BG-9J-Wsa" id="xQy-9H-esU"/>
+                                    <outlet property="postImg" destination="iYd-l0-Ggf" id="J1S-aN-QBJ"/>
                                     <outlet property="starsLbl" destination="E58-oQ-e5e" id="C2Q-gc-TP1"/>
                                     <outlet property="userImg" destination="CKp-NP-5R5" id="V6y-PD-P4H"/>
                                     <outlet property="username" destination="1tb-ar-mzl" id="JJO-j1-a8h"/>

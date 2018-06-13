@@ -13,9 +13,9 @@ import UserNotifications
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterDelegate, MessagingDelegate {
     
-    var newPosts: [Post] = []
+    //var newPosts: [Post] = []
     
-    var postsToSave: [[String:AnyObject]] = [[:]]
+    //var postsToSave: [[String:AnyObject]] = [[:]]
     
     func messaging(_ messaging: Messaging, didRefreshRegistrationToken fcmToken: String) {
         //hello
@@ -54,7 +54,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return true
     }
     
-    //get data
+    /*//get data
     func getPosts(){
         
         //get all posts
@@ -189,7 +189,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             
         }
         
-        
+        */
     
 
     func applicationWillResignActive(_ application: UIApplication) {

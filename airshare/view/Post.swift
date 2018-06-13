@@ -21,6 +21,7 @@ class Post: NSObject, NSCoding {
     private var _date: String!
     private var _keys: Array<String>!
     private var _reportNum: Int!
+    private var _frame: Int!
     
     var Username: String!
     var UserImg: UIImage!
@@ -42,6 +43,18 @@ class Post: NSObject, NSCoding {
     
     var stars: Int {
         return _stars
+    }
+    
+    var frame: Int {
+        if _frame != nil {
+            print("the frame is there")
+            return _frame
+        } else {
+            print("the frame is not there")
+            return 0
+            
+        }
+        
     }
     
     var reportNum: Int {
@@ -69,7 +82,7 @@ class Post: NSObject, NSCoding {
         return _keys
     }
     
-    init(postText: UIImage, username: String, userImg: UIImage, stars: Int, date: String, keys: Array<String>, reportNum: Int, postKey: String) {
+    init(postText: UIImage, username: String, userImg: UIImage, stars: Int, date: String, keys: Array<String>, reportNum: Int, postKey: String, frame: Int) {
         _postText = postText
         _username = username
         _userImg = userImg
@@ -78,6 +91,7 @@ class Post: NSObject, NSCoding {
         _keys = keys
         _reportNum = reportNum
         _postKey = postKey
+        _frame = frame
     }
     
     init(postKey: String, postData: Dictionary<String, AnyObject>) {
@@ -113,6 +127,16 @@ class Post: NSObject, NSCoding {
             _reportNum = reportNum
         } else {
             _reportNum = 0
+        }
+        
+        if let frame = postData["frame"] as? Int {
+            print("the frame is there")
+            _frame = frame
+            
+        } else {
+            print("the frame is not there")
+            _frame = 0
+            
         }
         
         _postRef = Database.database().reference().child("posts").child(_postKey)
@@ -155,7 +179,8 @@ class Post: NSObject, NSCoding {
                   date: (aDecoder.decodeObject(forKey: "date") as? String)!,
                   keys: (aDecoder.decodeObject(forKey: "keys") as? Array<String>)!,
                   reportNum: (aDecoder.decodeObject(forKey: "reportNum") as! Int),
-                  postKey: (aDecoder.decodeObject(forKey: "postKey")as! String))
+                  postKey: (aDecoder.decodeObject(forKey: "postKey")as! String),
+                  frame: /*(aDecoder.decodeObject(forKey: "frame") as? Int)*/1)
         
     }
     
@@ -176,6 +201,8 @@ class Post: NSObject, NSCoding {
         aCoder.encode(_reportNum, forKey: "reportNum")
         
         aCoder.encode(_postKey, forKey: "postKey")
+        
+        aCoder.encode(_frame, forKey: "frame")
         
     }
 }
