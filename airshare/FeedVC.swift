@@ -430,7 +430,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
     }
     
     func getPosts(){
-        
+        /*
         /*//Download all cloud posts
         
         Database.database().reference().child("textPosts").observe(.childAdded) { (snapshot) in
@@ -500,7 +500,7 @@ class FeedVC: UITableViewController, GADInterstitialDelegate {
             } else {
                 self.refreshControl?.endRefreshing()
             }
-        }*/
+        }*/*/
         
     }
     

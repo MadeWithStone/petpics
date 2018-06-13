@@ -380,7 +380,7 @@ class ViewController: UIViewController {
         Database.database().reference().child("textPosts").observeSingleEvent(of: .value) { (snapshot) in
             
             //create variable with all contents of data snapshot
-            guard var snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
+            guard let snap = snapshot.children.allObjects as? [DataSnapshot] else { return }
             self.cloudPostsCount = snap.count
             //get local data
             if let loadedData = UserDefaults.standard.value(forKey: "localPosts") as? NSData {
@@ -394,7 +394,10 @@ class ViewController: UIViewController {
                
                 if localData.count == snap.count {
                     print("no new posts to download")
+                     print("there are ", snap.count, " cloud posts and ", localData.count, " local posts")
                 } else if localData.count > snap.count{
+                    print("there are ", snap.count, " cloud posts and ", localData.count, " local posts")
+                    print("more local posts than cloud posts")
                     UserDefaults.standard.removeObject(forKey: "localPosts")
                     self.addTo = false
                     //if there are no local posts this code runs
@@ -411,6 +414,7 @@ class ViewController: UIViewController {
                     }
                     print("count ", self.postsToSave.count)
                 }else {
+                     print("there are ", snap.count, " cloud posts and ", localData.count, " local posts")
                     print("only downloading new posts")
                     self.addTo = true
                     var datasource = 0
@@ -430,10 +434,14 @@ class ViewController: UIViewController {
                             //check if ids are the same
                             let idLocal = i.postKey
                             if idLocal != idCloud {
-                                
+                                if postDict!["reported"] as! String != "true" {
+                                    //append cloud posts to "postsToSave"
+                                    self.postsToSave.append(postDict!)
+                                    amount.append(postDict!)
+                                }
                                 //append only new posts to "postsToSave"
-                                self.postsToSave.append(postDict!)
-                                amount.append(postDict!)
+                                
+                                
                                 
                             } else {
                                 //what to do if the ids do not match
@@ -449,20 +457,25 @@ class ViewController: UIViewController {
                     
                     
                     var m = 0
+                    var am = 0
                     for d in self.postsToSave {
                         
                         for a in amount {
                             if a["id"] as? String == d["id"] as? String && m <= self.postsToSave.count{
                                 self.postsToSave.remove(at: m)
+                                am = -1
+                            } else {
+                                am=1
                             }
                         }
-                        m = m + 1
+                        m = m + am
                     }
                 }
                 //loop through cloud data
                 
                 
             } else {
+                print("no loaded posts")
                 self.addTo = false
                 //if there are no local posts this code runs
                 for data in snap {
